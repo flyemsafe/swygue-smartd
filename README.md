@@ -3,9 +3,22 @@ swygue-smartd
 
 Installs and configures smartd with a notification script for emailing SMART disk errors.
 
+About the notification
+----------------------
+
+```
+DEVICESCAN -a -o on -S on -n standby,q -s (S/../.././02|L/../../6/03) -W 4,35,40 -m <email> -M exec /usr/local/bin/smartdnotify
+```
+
+This does:
+- A short test every day from 2 a.m..
+- A long test every Saturday at 3 a.m..
+
+Then sends an email when SMART detects an error.
+
 This role was tested on Fedora 27 only.
 
-https://github.com/CSCfi/ansible-role-smartd
+https://github.com/flyemsafe/swygue-smartd
 
 Requirements
 ------------
