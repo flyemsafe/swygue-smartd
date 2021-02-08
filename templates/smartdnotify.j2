@@ -1,0 +1,43 @@
+#! /bin/bash
+
+# Notify desktop user
+HOST=$(hostname -s)
+DISK=$(echo "$SMARTD_DEVICE" | grep -o "sd[a-z]*")
+DISK_PATH=$(ls -l /dev/disk/by-path/|grep -v part | grep "$DISK" | awk '{print $9}')
+SERIAL=$(hdparm -I "$SMARTD_DEVICE" | awk -F: '/Serial Number/ {print $2}'|sed 's/^[[:space:]]*//g')
+MODEL=$(hdparm -I "$SMARTD_DEVICE" | awk -F: '/Model Number/ {print $2}'|sed 's/^[[:space:]]*//g')
+SUBJECT="$HOST $DISK FAILURE WARNING: Serial=$SERIAL"
+email=$(mktemp)
+
+# Send mail
+cat > $email <<EOF
+##################
+# DISK SATA PATH #
+##################
+
+$DISK_PATH
+
+#################
+# ERROR MESSAGE #
+#################
+
+$SMARTD_MESSAGE
+
+###############
+# DEVICE INFO #
+###############
+
+$SMARTD_DEVICEINFO
+
+SMARTD_DEVICESTRING=$SMARTD_DEVICESTRING
+EOF
+
+mail -s "$SUBJECT" "$SMARTD_ADDRESS" < $email
+
+
+# direct write to terminals, do not use 'wall', because we don't want its ugly header
+for t in $(who | awk '{ print $2; }' | grep -e '^tty' -e '^pts/')
+do
+  echo "$SUBJECT $DISK_PATH
+$SMARTD_MESSAGE" >/dev/$t 2>/dev/null ||:
+done

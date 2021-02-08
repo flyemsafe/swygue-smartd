@@ -1,0 +1,17 @@
+---
+# defaults file for swygue-smartd
+
+# If smartd_monitor_all_found_disks is True - add all from smartctl --scan
+# If smartd_monitor_all_found_disks is False - use the smartd.conf from the package and its DEVICESCAN
+smartd_monitor_all_found_disks: True
+
+# Who should recevie the alerts
+smartd_recipent:
+
+# Changes to these variables are optional
+smartd_service: True
+smartd_service_enabled: "yes"
+smartd_service_state: "started"
+smartd_config_file: "/etc/smartmontools/smartd.conf"
+smartd_notify_script: /usr/local/bin/smartdnotify
+smartd_device_arguments: "-a -o on -S on -n standby,q -s (S/../.././02|L/../../6/03) -W 4,45,55 -m {{ smartd_recipent }} -M exec {{ smartd_notify_script }}"
