@@ -2,25 +2,17 @@
 # tasks file for swygue-smartd
 
 - name: Install smartmontools
-  action: >
-    {{ ansible_pkg_mgr }}
-    name="smartmontools"
-    state=installed
-  when: (smartd_service and ansible_virtualization_role != "guest") or (ansible_virtualization_type == "docker")
-
-#- name: debug print ansible_devices.sda.vendor if verbosity is one or higher
-#  debug: var=ansible_devices.sda.vendor verbosity=1
-#  when: ansible_devices.sda is defined
+  package:
+    name: smartmontools
+    state: installed
+  when: smartd_service and ansible_virtualization_role != "guest"
 
 - name: grab list of devices by running smartctl --scan
   command: "/usr/sbin/smartctl --scan"
   register: smart_list_of_devices
   check_mode: no
   changed_when: False
-  when: smartd_service
-
-#- include_tasks: generic.yml
-#  when: smartd_monitor_all_found_disks and smartd_service and #ansible_virtualization_role != "guest"
+  when: smartd_service|bool
 
 - name: check if "{{ smartd_config_file }}.bkp" exist
   stat:
@@ -32,19 +24,27 @@
   when: smartd_config.stat.exists == False
 
 - name: print smart_list_of_devices if it is defined
-  debug: var=item.split('#').0 verbosity=1
-  with_items: "{{ smart_list_of_devices.stdout_lines | default({})}}"
+  debug: 
+    var: item.split('#').0 
+    verbosity: 1
+  loop: "{{ smart_list_of_devices.stdout_lines | default({})}}"
 
 - name: Deploy smartd.conf template
-  template: owner=root group=root mode=0644
-    src=smartd.conf.j2
-    dest={{ smartd_config_file }}
-  when: smartd_config.stat.exists == False
+  template: 
+    owner: root 
+    group: root 
+    mode: 0644
+    src: smartd.conf.j2
+    dest: "{{ smartd_config_file }}"
+  #when: smartd_config.stat.exists == False
 
 - name: Deploy "{{ smartd_notify_script }}" template
-  template: owner=root group=root mode=0755
-    src=smartdnotify.j2
-    dest="{{ smartd_notify_script }}"
+  template: 
+    owner: root 
+    group: root 
+    mode: 0755
+    src: smartdnotify.j2
+    dest: "{{ smartd_notify_script }}"
   notify: restart smartd
 
 - name: Populate smartd file with these devices
@@ -59,5 +59,9 @@
     - restart smartd
 
 - name: enable smartd service
-  service: name=smartd enabled={{ smartd_service_enabled }} state={{ smartd_service_state }}
+  service: 
+    name: smartd 
+    enabled: "{{ smartd_service_enabled }}" 
+    state: "{{ smartd_service_state }}"
   when: smartd_service and ansible_virtualization_role != "guest"
+
