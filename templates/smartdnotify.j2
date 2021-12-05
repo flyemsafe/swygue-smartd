@@ -4,8 +4,8 @@
 HOST=$(hostname -s)
 DISK=$(echo "$SMARTD_DEVICE" | grep -o "sd[a-z]*")
 DISK_PATH=$(ls -l /dev/disk/by-path/|grep -v part | grep "$DISK" | awk '{print $9}')
-SERIAL=$(hdparm -I "$SMARTD_DEVICE" | awk -F: '/Serial Number/ {print $2}'|sed 's/^[[:space:]]*//g')
-MODEL=$(hdparm -I "$SMARTD_DEVICE" | awk -F: '/Model Number/ {print $2}'|sed 's/^[[:space:]]*//g')
+SERIAL=$(/usr/sbin/hdparm -I "$SMARTD_DEVICE" | awk -F: '/Serial Number/ {print $2}'|sed 's/^[[:space:]]*//g')
+MODEL=$(/usr/sbin/hdparm -I "$SMARTD_DEVICE" | awk -F: '/Model Number/ {print $2}'|sed 's/^[[:space:]]*//g')
 SUBJECT="$HOST $DISK FAILURE WARNING: Serial=$SERIAL"
 email=$(mktemp)
 
