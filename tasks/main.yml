@@ -65,3 +65,5 @@
     state: "{{ smartd_service_state }}"
   when: smartd_service and ansible_virtualization_role != "guest"
 
+- name: include smartd logging setup
+  include_tasks: enable_var_log.yml

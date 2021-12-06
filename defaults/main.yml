@@ -15,3 +15,16 @@ smartd_service_state: "restarted"
 smartd_config_file: "/etc/smartmontools/smartd.conf"
 smartd_notify_script: /usr/local/bin/smartdnotify
 smartd_device_arguments: "-a -o on -S on -n standby,q -s (S/../.././02|L/../../6/03) -W 4,45,55 -m {{ smartd_recipent }} -M exec {{ smartd_notify_script }}"
+
+
+# logrotate
+smartd_logrotate_confd:
+  - path: smartd
+    conf: |
+      /var/log/smartd/* {
+             weekly
+             rotate 3
+             size 1M
+             compress
+             delaycompress
+      }
