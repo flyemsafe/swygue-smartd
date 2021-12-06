@@ -1,0 +1,29 @@
+---
+- name: set current timestamp
+  set_fact:
+    smartd_log_start: "{{ '%H:%M:%S'|strftime(ansible_date_time.time|int - 1800) }}"
+
+- name: check for smartd selinux policy alerts
+  shell: "ausearch --start '{{ smartd_log_start }}' -c 'smartd' --raw || test $? -eq 1"
+  ignore_errors: yes
+  register: smartd_selinux_alerts
+
+- name: Create smartd selinux policies and load them
+  when: smartd_selinux_alerts.stdout_lines|length > 0
+  shell: |
+    for name in $(lsscsi -kb | awk -F '/' -e '$2 ~/[a-zA-Z]/ {print $3}')
+    do 
+         ausearch -c 'smartd' --raw | sudo audit2allow -M $name
+    	 semodule -X 300 -i ${name}.pp
+    	 rm -f ${name}.*
+    done
+  register: smartd_sepolicy
+  ignore_errors: yes
+
+- name: Create smartd logrotate config
+  blockinfile:
+    path: "/etc/logrotate.d/{{ item.path }}"
+    block: "{{ item.conf }}"
+    create: true
+  loop: "{{ smartd_logrotate_confd }}"
+      
